@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chatbot</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <!-- Sidebar: list of saved conversations -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <button class="new-chat-btn" id="newChatBtn">
+            <span>+</span> New chat
+          </button>
+        </div>
+        <nav class="conversation-list" id="conversationList"></nav>
+        <div class="sidebar-footer">Conversations are saved in this browser.</div>
+      </aside>
+
+      <!-- Main chat area -->
+      <main class="chat">
+        <header class="chat-header">
+          <button class="icon-btn" id="toggleSidebar" title="Toggle sidebar">☰</button>
+          <h1 id="chatTitle">New chat</h1>
+        </header>
+
+        <div class="messages" id="messages">
+          <div class="empty-state" id="emptyState">
+            <h2>How can I help you today?</h2>
+            <p>Ask anything to start a new conversation.</p>
+          </div>
+        </div>
+
+        <form class="composer" id="composer">
+          <textarea
+            id="input"
+            placeholder="Message the assistant…  (Enter to send, Shift+Enter for a new line)"
+            rows="1"
+            autocomplete="off"
+          ></textarea>
+          <button type="submit" id="sendBtn" title="Send" disabled>↑</button>
+        </form>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

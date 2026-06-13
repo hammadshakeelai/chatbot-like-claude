@@ -1,0 +1,16 @@
+{
+  "name": "chatbot-like-claude",
+  "version": "1.0.0",
+  "description": "A simple Claude-style chatbot web app: chat with an LLM and keep your conversations in a sidebar.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "openai": "latest"
+  },
+  "devDependencies": {
+    "dotenv": "latest",
+    "express": "latest"
+  }
+}
