@@ -1,4 +1,5 @@
-<p align="center"><img src="assets/banner.svg" alt="Chatbot like Claude" width="100%"></p>
+<p align="center"><img src="assets/banner-desktop.svg" alt="Chatbot like Claude — desktop" width="100%"></p>
+<p align="center"><img src="assets/banner-phone.svg" alt="Chatbot like Claude — mobile" width="100%"></p>
 
 <p align="center">
   <img alt="Node 18+" src="https://img.shields.io/badge/Node-18%2B-339933?logo=node.js&logoColor=white">
@@ -147,7 +148,7 @@ Then set the same environment variables under **Vercel → Project → Settings 
 │   ├── index.html
 │   ├── styles.css
 │   └── app.js            Sidebar, streaming, voice, vision, image, read-aloud
-├── assets/banner.svg
+├── assets/              README banners (desktop + mobile)
 ├── server.js             Local dev server (Express) — same handlers
 ├── vercel.json
 └── .env.example
