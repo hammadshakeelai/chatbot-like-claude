@@ -3,47 +3,101 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chatbot</title>
+    <title>Chatbot like Claude</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div class="app">
-      <!-- Sidebar: list of saved conversations -->
+      <!-- Sidebar -->
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
+          <div class="brand">
+            <span class="brand-mark">✨</span>
+            <span class="brand-name">Chatbot</span>
+          </div>
           <button class="new-chat-btn" id="newChatBtn">
-            <span>+</span> New chat
+            <span class="plus">+</span> New chat
           </button>
         </div>
         <nav class="conversation-list" id="conversationList"></nav>
-        <div class="sidebar-footer">Conversations are saved in this browser.</div>
+        <div class="sidebar-footer">
+          <span class="dot"></span> Conversations are saved in this browser
+        </div>
       </aside>
 
       <!-- Main chat area -->
       <main class="chat">
         <header class="chat-header">
-          <button class="icon-btn" id="toggleSidebar" title="Toggle sidebar">☰</button>
+          <button class="icon-btn" id="toggleSidebar" title="Toggle sidebar" aria-label="Toggle sidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
           <h1 id="chatTitle">New chat</h1>
         </header>
 
         <div class="messages" id="messages">
           <div class="empty-state" id="emptyState">
+            <div class="empty-logo">✨</div>
             <h2>How can I help you today?</h2>
-            <p>Ask anything to start a new conversation.</p>
+            <p>Chat with seven AI models, attach an image, dictate with your voice,
+               hear replies read aloud, or type <code>/image</code> to generate a picture.</p>
+            <div class="examples" id="examples">
+              <button class="example" data-prompt="Explain quantum computing like I'm five.">
+                <span class="ex-emoji">🧠</span> Explain quantum computing simply
+              </button>
+              <button class="example" data-prompt="Write a short haiku about the ocean at dawn.">
+                <span class="ex-emoji">🪶</span> Write a haiku about the ocean
+              </button>
+              <button class="example" data-prompt="/image a cozy wooden cabin in snowy mountains at sunset, warm light">
+                <span class="ex-emoji">🎨</span> Generate a cozy cabin image
+              </button>
+              <button class="example" data-prompt="Give me a simple, energizing 5-minute morning routine.">
+                <span class="ex-emoji">☀️</span> Plan a 5-minute morning routine
+              </button>
+            </div>
           </div>
         </div>
 
         <form class="composer" id="composer">
-          <textarea
-            id="input"
-            placeholder="Message the assistant…  (Enter to send, Shift+Enter for a new line)"
-            rows="1"
-            autocomplete="off"
-          ></textarea>
-          <button type="submit" id="sendBtn" title="Send" disabled>↑</button>
+          <div class="composer-box" id="composerBox">
+            <div class="attachment" id="attachment" hidden>
+              <img id="attachmentThumb" alt="attachment preview" />
+              <button type="button" id="removeAttachment" title="Remove image" aria-label="Remove image">×</button>
+            </div>
+
+            <textarea
+              id="input"
+              placeholder="Message the assistant…  (Enter to send, Shift+Enter for a new line)"
+              rows="1"
+              autocomplete="off"
+            ></textarea>
+
+            <div class="composer-tools">
+              <div class="tools-left">
+                <select id="providerSelect" title="Choose the model" aria-label="Choose the model"></select>
+                <button type="button" class="fast-toggle" id="fastBtn" title="Fast mode: use quicker, lighter models" aria-pressed="false">⚡ Fast</button>
+                <button type="button" class="tool-btn" id="attachBtn" title="Attach an image" aria-label="Attach an image">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+                </button>
+                <button type="button" class="tool-btn" id="micBtn" title="Voice input (dictate)" aria-label="Voice input">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                </button>
+                <input type="file" id="fileInput" accept="image/*" hidden />
+              </div>
+              <button type="submit" id="sendBtn" title="Send" aria-label="Send" disabled>
+                <svg class="send-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="6 11 12 5 18 11"/></svg>
+                <svg class="stop-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2.5"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="composer-hint" id="composerHint">
+            <code>/image</code> a prompt to generate a picture · 🎤 dictate · 🖼 ask about an image · 🔊 hear replies aloud
+          </div>
         </form>
       </main>
     </div>
+
+    <div class="toast-wrap" id="toastWrap" aria-live="polite"></div>
 
     <script src="app.js"></script>
   </body>
