@@ -37,6 +37,7 @@ body {
 .app {
   display: flex;
   height: 100vh;
+  height: 100dvh; /* tracks mobile browser chrome so the composer stays visible */
   overflow: hidden;
 }
 
@@ -733,20 +734,81 @@ body {
 }
 
 /* ---------- Responsive ---------- */
+.sidebar-backdrop {
+  display: none;
+}
+
 @media (max-width: 720px) {
+  /* Sidebar becomes an overlay drawer that slides in from the left */
   .sidebar {
-    position: absolute;
+    position: fixed;
+    top: 0;
+    left: 0;
     z-index: 20;
     height: 100%;
     box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
   }
-  .examples {
-    grid-template-columns: 1fr;
+
+  /* Dimmed, tap-to-close backdrop shown only while the drawer is open */
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 15;
+    background: rgba(0, 0, 0, 0.42);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease;
   }
-  #providerSelect {
-    max-width: 140px;
+  .sidebar:not(.collapsed) ~ .sidebar-backdrop {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .chat-header {
+    padding: 10px 12px;
+  }
+  .messages {
+    padding: 16px 0 6px;
+    overscroll-behavior: contain;
+  }
+  .msg {
+    padding: 0 16px;
+    gap: 11px;
+  }
+
+  .empty-state {
+    margin-top: 7vh;
+    padding: 0 18px;
   }
   .empty-state h2 {
     font-size: 23px;
+  }
+  .examples {
+    grid-template-columns: 1fr;
+  }
+
+  /* Composer: clear the iPhone home indicator and stop iOS focus-zoom */
+  .composer {
+    padding: 8px 12px calc(12px + env(safe-area-inset-bottom));
+  }
+  #input {
+    font-size: 16px;
+  }
+  .composer-tools {
+    gap: 6px;
+  }
+  .tools-left {
+    gap: 5px;
+    min-width: 0;
+  }
+  #providerSelect {
+    max-width: 40vw;
+  }
+  .fast-toggle {
+    padding: 0 9px;
+  }
+  .composer-hint {
+    display: none;
   }
 }

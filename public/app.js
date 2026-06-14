@@ -39,6 +39,7 @@ const els = {
   list: document.getElementById("conversationList"),
   newChat: document.getElementById("newChatBtn"),
   toggle: document.getElementById("toggleSidebar"),
+  backdrop: document.getElementById("sidebarBackdrop"),
   title: document.getElementById("chatTitle"),
   messages: document.getElementById("messages"),
   empty: document.getElementById("emptyState"),
@@ -89,6 +90,7 @@ function newConversation() {
   els.title.textContent = "New chat";
   renderSidebar();
   renderMessages();
+  closeSidebarOnMobile();
   els.input.focus();
 }
 function selectConversation(id) {
@@ -98,6 +100,7 @@ function selectConversation(id) {
   els.title.textContent = conv ? conv.title : "New chat";
   renderSidebar();
   renderMessages();
+  closeSidebarOnMobile();
 }
 function deleteConversation(id, e) {
   e.stopPropagation();
@@ -875,7 +878,18 @@ els.form.addEventListener("submit", (e) => {
 });
 
 els.newChat.addEventListener("click", newConversation);
-els.toggle.addEventListener("click", () => els.sidebar.classList.toggle("collapsed"));
+
+const isMobile = () => window.matchMedia("(max-width: 720px)").matches;
+function closeSidebarOnMobile() {
+  if (isMobile()) els.sidebar.classList.add("collapsed");
+}
+// On phones the sidebar is a drawer — start it tucked away.
+if (isMobile()) els.sidebar.classList.add("collapsed");
+
+els.toggle.addEventListener("click", () =>
+  els.sidebar.classList.toggle("collapsed")
+);
+els.backdrop.addEventListener("click", closeSidebarOnMobile);
 els.attachBtn.addEventListener("click", () => els.fileInput.click());
 els.fileInput.addEventListener("change", (e) => onFilePicked(e.target.files[0]));
 els.removeAttachment.addEventListener("click", clearAttachment);
