@@ -129,23 +129,95 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.conv-delete {
+/* Delete / restore icon buttons on each row — always visible */
+.conv-delete,
+.conv-act {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
   border: none;
   background: transparent;
-  color: #908e88;
+  color: #8e8c86;
   cursor: pointer;
-  font-size: 11px;
-  opacity: 0;
-  padding: 2px 4px;
-  border-radius: 6px;
+  border-radius: 7px;
+  padding: 0;
+  opacity: 0.8;
   transition: opacity 0.12s, color 0.12s, background 0.12s;
 }
-.conv-item:hover .conv-delete {
-  opacity: 1;
+.conv-delete svg,
+.conv-act svg {
+  width: 15px;
+  height: 15px;
 }
 .conv-delete:hover {
   color: #ff8a78;
   background: #ffffff14;
+  opacity: 1;
+}
+.conv-act:hover {
+  color: #fff;
+  background: #ffffff14;
+  opacity: 1;
+}
+.conv-act.danger:hover {
+  color: #ff8a78;
+}
+.conv-actions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.conv-item.trashed {
+  color: #918f89;
+  cursor: default;
+}
+.trash-empty {
+  padding: 18px 12px;
+  text-align: center;
+  font-size: 13px;
+  color: #807e78;
+}
+
+/* Trash toggle button (sits above the sidebar footer) */
+.trash-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: calc(100% - 16px);
+  margin: 2px 8px 6px;
+  padding: 9px 11px;
+  border: none;
+  background: transparent;
+  color: #c4c2bc;
+  font-size: 13.5px;
+  font-family: inherit;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.trash-toggle:hover {
+  background: #ffffff12;
+}
+.trash-toggle .ti {
+  display: inline-flex;
+}
+.trash-toggle svg {
+  width: 16px;
+  height: 16px;
+}
+.trash-count {
+  margin-left: auto;
+  background: #ffffff1f;
+  color: #e7e5df;
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 18px;
+  text-align: center;
+  padding: 1px 6px;
+  border-radius: 10px;
 }
 .sidebar-footer {
   display: flex;
@@ -718,6 +790,82 @@ body {
   }
 }
 
+/* ---------- Confirmation modal ---------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(20, 18, 16, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.15s ease;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+}
+.modal {
+  background: var(--panel);
+  border-radius: 16px;
+  padding: 22px 22px 18px;
+  max-width: 380px;
+  width: 100%;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.3);
+  animation: rise 0.2s ease;
+}
+.modal-title {
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 650;
+  color: var(--text);
+}
+.modal-msg {
+  margin: 0 0 20px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.modal-btn {
+  border: 1px solid var(--border-strong);
+  background: var(--panel);
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 550;
+  font-family: inherit;
+  padding: 9px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.modal-btn:hover {
+  background: var(--bg);
+}
+.modal-btn.confirm {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.modal-btn.confirm:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+.modal-btn.confirm.danger {
+  background: #b3402a;
+  border-color: #b3402a;
+}
+.modal-btn.confirm.danger:hover {
+  background: #9a3522;
+  border-color: #9a3522;
+}
+
 /* ---------- Scrollbars ---------- */
 .messages::-webkit-scrollbar,
 .conversation-list::-webkit-scrollbar {
@@ -795,18 +943,25 @@ body {
   #input {
     font-size: 16px;
   }
+  /* Let the provider dropdown absorb the squeeze so the mic + send button
+     never get clipped off the right edge. */
   .composer-tools {
     gap: 6px;
   }
   .tools-left {
-    gap: 5px;
+    flex: 1;
     min-width: 0;
+    gap: 6px;
   }
   #providerSelect {
-    max-width: 40vw;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: none;
   }
-  .fast-toggle {
-    padding: 0 9px;
+  .fast-toggle,
+  .tool-btn,
+  #sendBtn {
+    flex-shrink: 0;
   }
   .composer-hint {
     display: none;

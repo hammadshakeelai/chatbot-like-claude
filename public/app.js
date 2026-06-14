@@ -19,11 +19,15 @@ const ICON = {
   speaker: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19.5 5a9 9 0 0 1 0 14"/></svg>',
   stop: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>',
   regen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>',
+  restore: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>',
+  back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>',
 };
 
 // ---------- State ----------
 let conversations = loadConversations();
 let activeId = null;
+let viewingTrash = false;
 let isStreaming = false;
 let abortController = null;
 let provider = localStorage.getItem(PROVIDER_KEY) || "groq";
@@ -40,6 +44,7 @@ const els = {
   newChat: document.getElementById("newChatBtn"),
   toggle: document.getElementById("toggleSidebar"),
   backdrop: document.getElementById("sidebarBackdrop"),
+  trashToggle: document.getElementById("trashToggle"),
   title: document.getElementById("chatTitle"),
   messages: document.getElementById("messages"),
   empty: document.getElementById("emptyState"),
@@ -86,6 +91,7 @@ function uid() {
 function newConversation() {
   stopAudio();
   activeId = null;
+  viewingTrash = false;
   clearAttachment();
   els.title.textContent = "New chat";
   renderSidebar();
@@ -102,12 +108,95 @@ function selectConversation(id) {
   renderMessages();
   closeSidebarOnMobile();
 }
-function deleteConversation(id, e) {
-  e.stopPropagation();
+// Soft delete: move a conversation to the Trash (recoverable).
+async function trashConversation(id, e) {
+  if (e) e.stopPropagation();
+  const conv = conversations.find((c) => c.id === id);
+  if (!conv) return;
+  const ok = await showConfirm({
+    title: "Move to Trash?",
+    message: `“${conv.title}” will be moved to Trash. You can restore it from there later.`,
+    confirmLabel: "Move to Trash",
+  });
+  if (!ok) return;
+  conv.trashedAt = Date.now();
+  saveConversations();
+  if (activeId === id) {
+    stopAudio();
+    activeId = null;
+    els.title.textContent = "New chat";
+    renderMessages();
+  }
+  renderSidebar();
+  toast("Moved to Trash", "success");
+}
+
+// Restore a conversation out of the Trash.
+function restoreConversation(id) {
+  const conv = conversations.find((c) => c.id === id);
+  if (!conv) return;
+  delete conv.trashedAt;
+  saveConversations();
+  if (!conversations.some((c) => c.trashedAt)) viewingTrash = false;
+  renderSidebar();
+  toast("Restored", "success");
+}
+
+// Permanent delete from the Trash — cannot be undone.
+async function permanentlyDelete(id) {
+  const conv = conversations.find((c) => c.id === id);
+  if (!conv) return;
+  const ok = await showConfirm({
+    title: "Delete forever?",
+    message: `“${conv.title}” will be permanently deleted. This can’t be undone.`,
+    confirmLabel: "Delete forever",
+    danger: true,
+  });
+  if (!ok) return;
   conversations = conversations.filter((c) => c.id !== id);
   saveConversations();
-  if (activeId === id) newConversation();
-  else renderSidebar();
+  if (!conversations.some((c) => c.trashedAt)) viewingTrash = false;
+  renderSidebar();
+  toast("Deleted permanently", "success");
+}
+
+// In-app confirmation dialog (avoids native confirm()). Resolves true/false.
+function showConfirm({ title, message, confirmLabel = "Confirm", cancelLabel = "Cancel", danger = false }) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.innerHTML =
+      '<div class="modal" role="dialog" aria-modal="true">' +
+      '<h3 class="modal-title"></h3><p class="modal-msg"></p>' +
+      '<div class="modal-actions">' +
+      '<button class="modal-btn cancel"></button>' +
+      '<button class="modal-btn confirm' + (danger ? " danger" : "") + '"></button>' +
+      "</div></div>";
+    overlay.querySelector(".modal-title").textContent = title;
+    overlay.querySelector(".modal-msg").textContent = message;
+    const cancelBtn = overlay.querySelector(".cancel");
+    const confirmBtn = overlay.querySelector(".confirm");
+    cancelBtn.textContent = cancelLabel;
+    confirmBtn.textContent = confirmLabel;
+
+    function close(result) {
+      overlay.remove();
+      document.removeEventListener("keydown", onKey);
+      resolve(result);
+    }
+    function onKey(ev) {
+      if (ev.key === "Escape") close(false);
+      else if (ev.key === "Enter") close(true);
+    }
+    overlay.addEventListener("click", (ev) => {
+      if (ev.target === overlay) close(false);
+    });
+    cancelBtn.onclick = () => close(false);
+    confirmBtn.onclick = () => close(true);
+    document.addEventListener("keydown", onKey);
+    document.body.appendChild(overlay);
+    confirmBtn.focus();
+  });
 }
 function ensureConversation(seedTitle) {
   let conv = getActive();
@@ -128,24 +217,77 @@ function ensureConversation(seedTitle) {
 }
 
 // ---------- Sidebar ----------
+function iconBtn(className, label, icon, onClick) {
+  const b = document.createElement("button");
+  b.className = className;
+  b.title = label;
+  b.setAttribute("aria-label", label);
+  b.innerHTML = icon;
+  b.onclick = onClick;
+  return b;
+}
+
 function renderSidebar() {
+  const trashed = conversations.filter((c) => c.trashedAt);
+  const active = conversations.filter((c) => !c.trashedAt);
+
+  // Trash toggle (entry into / out of the Trash view)
+  if (viewingTrash) {
+    els.trashToggle.innerHTML = `<span class="ti">${ICON.back}</span> Back to chats`;
+    els.trashToggle.style.display = "";
+  } else if (trashed.length) {
+    els.trashToggle.innerHTML =
+      `<span class="ti">${ICON.trash}</span> Trash <span class="trash-count">${trashed.length}</span>`;
+    els.trashToggle.style.display = "";
+  } else {
+    els.trashToggle.style.display = "none";
+  }
+
   els.list.innerHTML = "";
-  conversations.forEach((conv) => {
+
+  if (viewingTrash && trashed.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "trash-empty";
+    empty.textContent = "Trash is empty";
+    els.list.appendChild(empty);
+    return;
+  }
+
+  (viewingTrash ? trashed : active).forEach((conv) => {
     const item = document.createElement("div");
-    item.className = "conv-item" + (conv.id === activeId ? " active" : "");
-    item.onclick = () => selectConversation(conv.id);
+    item.className =
+      "conv-item" +
+      (!viewingTrash && conv.id === activeId ? " active" : "") +
+      (viewingTrash ? " trashed" : "");
 
     const title = document.createElement("span");
     title.className = "conv-title";
     title.textContent = conv.title;
+    item.appendChild(title);
 
-    const del = document.createElement("button");
-    del.className = "conv-delete";
-    del.textContent = "Delete";
-    del.title = "Delete conversation";
-    del.onclick = (e) => deleteConversation(conv.id, e);
+    if (viewingTrash) {
+      const actions = document.createElement("div");
+      actions.className = "conv-actions";
+      actions.append(
+        iconBtn("conv-act", "Restore", ICON.restore, (e) => {
+          e.stopPropagation();
+          restoreConversation(conv.id);
+        }),
+        iconBtn("conv-act danger", "Delete forever", ICON.trash, (e) => {
+          e.stopPropagation();
+          permanentlyDelete(conv.id);
+        })
+      );
+      item.appendChild(actions);
+    } else {
+      item.onclick = () => selectConversation(conv.id);
+      item.appendChild(
+        iconBtn("conv-delete", "Move to Trash", ICON.trash, (e) =>
+          trashConversation(conv.id, e)
+        )
+      );
+    }
 
-    item.append(title, del);
     els.list.appendChild(item);
   });
 }
@@ -883,13 +1025,21 @@ const isMobile = () => window.matchMedia("(max-width: 720px)").matches;
 function closeSidebarOnMobile() {
   if (isMobile()) els.sidebar.classList.add("collapsed");
 }
-// On phones the sidebar is a drawer — start it tucked away.
-if (isMobile()) els.sidebar.classList.add("collapsed");
+// On phones the sidebar is a drawer — start it tucked away, and keep the
+// composer placeholder short so it doesn't overflow the narrow input.
+if (isMobile()) {
+  els.sidebar.classList.add("collapsed");
+  els.input.placeholder = "Message…";
+}
 
 els.toggle.addEventListener("click", () =>
   els.sidebar.classList.toggle("collapsed")
 );
 els.backdrop.addEventListener("click", closeSidebarOnMobile);
+els.trashToggle.addEventListener("click", () => {
+  viewingTrash = !viewingTrash;
+  renderSidebar();
+});
 els.attachBtn.addEventListener("click", () => els.fileInput.click());
 els.fileInput.addEventListener("change", (e) => onFilePicked(e.target.files[0]));
 els.removeAttachment.addEventListener("click", clearAttachment);
