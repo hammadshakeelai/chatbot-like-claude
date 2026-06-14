@@ -1,5 +1,10 @@
 {
   "functions": {
-    "api/chat.js": { "maxDuration": 60 }
+    "api/chat.js": { "maxDuration": 60 },
+    "api/image.js": { "maxDuration": 30 },
+    "api/image-status.js": { "maxDuration": 20 },
+    "api/transcribe.js": { "maxDuration": 30 },
+    "api/speak.js": { "maxDuration": 30 },
+    "api/title.js": { "maxDuration": 15 }
   }
 }
